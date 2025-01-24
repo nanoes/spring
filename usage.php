@@ -37,18 +37,24 @@ $courier = new SpringCourier();
 // Create a new shipment
 $newPackageResponse = $courier->newPackage($order, $params);
 
-if ($newPackageResponse['success'] ?? false) {
+if (!empty($newPackageResponse['success']) && $newPackageResponse['success']) {
     echo "Shipment created successfully! Tracking number: " . $newPackageResponse['trackingNumber'] . "<br>";
 
     // Retrieve the shipping label
     $labelResponse = $courier->packagePDF($newPackageResponse['trackingNumber']);
 
-    if ($labelResponse['success'] ?? false) {
-        header('Content-type: application/pdf');
+    if (!empty($labelResponse['success']) && $labelResponse['success']) {
+        // Set PDF headers
+        header('Content-Type: application/pdf');
+        header('Content-Disposition: inline; filename="shipping_label.pdf"');
+        
+        // Display the label in the browser
         echo base64_decode($labelResponse["labelImage"]);
     } else {
-        echo "Error getting label: " . $labelResponse['message'] . "<br>";
+        // Display error message if label generation fails
+        echo "Error getting label: " . ($labelResponse['message'] ?? 'Unknown error') . "<br>";
     }
 } else {
-    echo "Error creating shipment: " . $newPackageResponse['message'] . "<br>";
+    // Display error message if shipment creation fails
+    echo "Error creating shipment: " . ($newPackageResponse['message'] ?? 'Unknown error') . "<br>";
 }
